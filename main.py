@@ -9,49 +9,41 @@
 #             = 3 → Fechamento
 #             = 4 → Abertura
 
-import cv2  # OpenCV: usado aqui apenas para salvar a imagem final (cv2.imwrite)
-import argparse # Biblioteca para ler parâmetros via linha de comando (terminal)
+import cv2
+import argparse
 from utils import read_binary_image
 from erosao import erosion
 from dilatacao import dilatation
 
 def main():
-    # configura o argparse para aceitar argumentos da linha de comando
+    # Argumentos da linha de comando
     parser = argparse.ArgumentParser(description="Operações morfológicas em imagens binárias.")
-    parser.add_argument("image", type=str, help="Caminho para a imagem binária (arquivo de texto).")
-    parser.add_argument("kernel", type=str, help="Caminho para o elemento estruturante (arquivo de texto).")
+    parser.add_argument("image", type=str, help="Caminho da imagem binária (arquivo de imagem).")
     parser.add_argument(
         "operation", type=int, choices=[1, 2, 3, 4],
-        help="Operação a ser realizada: 1 - Erosão, 2 - Dilatação, 3 - Fechamento, 4 - Abertura."
+        help="Operação: 1 - Erosão, 2 - Dilatação, 3 - Fechamento, 4 - Abertura."
     )
-    parser.add_argument("output", type=str, help="Caminho para salvar a imagem de saída.")
-
+    parser.add_argument("output", type=str, help="Caminho para salvar a imagem resultante.")
     args = parser.parse_args()
 
-    # Lê os arquivos de entrada
+    # Lê a imagem de entrada
     image = read_binary_image(args.image)
-    kernel = read_binary_image(args.kernel)
 
-    # Realiza a operação selecionada
+    # Executa a operação selecionada (kernel já está dentro dos arquivos)
     if args.operation == 1:
-        result = erosion(image, kernel)
+        result = erosion(image)
     elif args.operation == 2:
-        result = dilatation(image, kernel)
+        result = dilatation(image)
     elif args.operation == 3:
-        result = erosion(dilatation(image, kernel), kernel)
+        result = erosion(dilatation(image))
     elif args.operation == 4:
-        result = dilatation(erosion(image, kernel), kernel)
+        result = dilatation(erosion(image))
 
-    # a imagem gerada pelo algoritmo é composta por valores 0 e 1.
-    # para salvar como uma imagem real (visível), multiplicamos por 255
-    # e invertemos as cores (para que o fundo fique preto e o objeto branco).
+    # Converte o resultado (0/1) para 0/255 e inverte para visualização
     inverted_image = 255 - result * 255
-
-    # o cv2.imwrite é utilizado porque ele salva rapidamente uma matriz numpy
     cv2.imwrite(args.output, inverted_image)
 
     print(f"Imagem processada e salva em: {args.output}")
-
 
 if __name__ == '__main__':
     main()
